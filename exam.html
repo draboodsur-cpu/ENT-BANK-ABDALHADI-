@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0E6A70">
+<title>Opening…</title>
+<style>
+:root{--bg:#EEF2F3;--ink:#14242B;--muted:#5B6A71;--teal:#0E6A70;--line:#D3DCDF}
+@media (prefers-color-scheme:dark){:root{--bg:#0F1A1E;--ink:#E4ECEE;--muted:#93A4AA;--teal:#4FB7B5;--line:#2A3D44}}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+#ld{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;box-sizing:border-box}
+.spin{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--teal);animation:s 0.9s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+p{color:var(--muted);max-width:340px}a{color:var(--teal);font-weight:600}
+</style></head>
+<body><div id="ld"><div class="spin" id="sp"></div><p id="msg">Opening exam…</p></div>
+<script>
+(async function(){
+  var q=new URLSearchParams(location.search),f=q.get('f'),k=q.get('k')||f,t=q.get('t')||'';
+  if(!f){location.replace('./');return}
+  function fail(m){document.getElementById('sp').style.display='none';document.getElementById('msg').innerHTML=m+'<br><br><a href="./">Back to library</a>'}
+  try{
+    var url=f.split('/').map(encodeURIComponent).join('/');
+    var res=await Promise.all([fetch(url),fetch('ent-pre.js').then(function(x){return x.text()}),fetch('ent-persist.js').then(function(x){return x.text()})]);
+    if(!res[0].ok)throw new Error('status '+res[0].status);
+    var html=await res[0].text();
+    var head='<script>window.__ENT='+JSON.stringify({key:k,path:f,title:t}).replace(/</g,'\\u003c')+';<\/script><script>'+res[1]+'<\/script>';
+    var m=html.match(/<head[^>]*>/i);
+    html=m?html.replace(m[0],function(x){return x+head}):head+html;
+    var tail='<script>'+res[2]+'<\/script>',i=html.toLowerCase().lastIndexOf('</body>');
+    html=i>=0?html.slice(0,i)+tail+html.slice(i):html+tail;
+    document.open();document.write(html);document.close();
+  }catch(e){
+    fail(navigator.onLine?'This exam could not be opened. It may have been renamed or removed — go back and tap “Check for new exams”.':'This exam isn’t saved on your phone yet. Connect to the internet once and open the library so it can download.');
+  }
+})();
+</script></body></html>
